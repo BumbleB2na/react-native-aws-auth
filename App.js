@@ -76,7 +76,7 @@ export default class App extends React.Component {
 		})
 	};
 	isUrlValid = (url) => {
-		var isValid = url.substr(0, 7) === 'http://' || url.substr(0, 8) === 'https://';
+		var isValid = url.length > 9 && (url.substr(0, 7) === 'http://' || url.substr(0, 8) === 'https://');
 		return isValid;
 	};
 	saveHyperlink = () => {
