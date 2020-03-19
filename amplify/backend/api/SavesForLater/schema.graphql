@@ -1,0 +1,14 @@
+type Hyperlink 
+	@model
+	@auth( 
+		rules: [ 
+			{allow: owner, ownerField: "owner", operations: [create, read, update, delete]}
+		])
+{
+	id: ID!
+	title: String
+	url: String!
+	visited: Boolean
+	createdOn: String!
+	owner: String!
+}

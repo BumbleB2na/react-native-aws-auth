@@ -1,7 +1,36 @@
 import React from 'react';
 import { StyleSheet, Button, Text, TextInput, View, ScrollView, Linking, Alert, Platform } from 'react-native';
 
-export default class App extends React.Component {
+// make API calls to GraphQL service
+import Amplify from '@aws-amplify/core';
+import config from './aws-exports';
+
+import { Analytics } from 'aws-amplify';
+Amplify.configure({
+	...config,
+	Analytics: {
+		disabled: true
+	}
+});
+
+// execute GraphQL queries
+import API, { graphqlOperation } from '@aws-amplify/api';
+
+// auth with Amazon Cognito - see line at end of App.js for usage:
+import { withAuthenticator } from 'aws-amplify-react-native';
+import Auth from '@aws-amplify/auth';
+Auth.currentCredentials()
+  .then(d => console.log('data: ', d))
+  .catch(e => console.log('error: ', e))
+const withAuthenticatorConfig = {
+	includeGreetings: true,
+	usernameAttributes: 'email',   // If Cognito was set up where Username must be an email then, this makes it so signup/signin will show "Email". Without this a user would see both "Username" and "Email" fields on Sign Up and then "Username" on Sign In.
+	signUpConfig: {
+		hiddenDefaults: ["phone_number"]
+	}
+};
+
+class App extends React.Component {
 	state = {
 		title: '',
 		url: 'https://',
@@ -148,6 +177,68 @@ export default class App extends React.Component {
 	}
 }
 
+// GraphQL query to get hyperlinks
+const ListHyperlinks = `
+query Read {
+	listHyperlinks {
+		items {
+			id
+			title
+			url
+			visited
+			createdOn
+			owner
+		}
+	}
+}
+`;
+// GraphQL mutation to update an existing hyperlink
+const UpdateHyperlink = `
+mutation ($id: ID! $visited: Boolean $owner: String!) {
+	updateHyperlink(input: {
+		id: $id
+		visited: $visited
+		owner: $owner
+	}) {
+		id 
+		title 
+		url
+		visited
+		createdOn
+		owner
+	}
+}
+`;
+// GraphQL mutation to delete an existing hyperlink
+const DeleteHyperlink = `
+mutation ($id: ID!) {
+	deleteHyperlink(input: {
+		id: $id
+	}) { 
+		id
+	}
+}
+`;
+// GraphQL mutation to add a new hyperlink
+const AddHyperlink = `
+mutation ($title: String $url: String! $visited: Boolean! $createdOn: String! $owner: String!) {
+	createHyperlink(input: {
+		title: $title
+		url: $url
+		visited: $visited
+		createdOn: $createdOn
+		owner: $owner
+	}) {
+		id 
+		title 
+		url
+		visited
+		createdOn
+		owner
+	}
+}
+`;
+
 const styles = StyleSheet.create({
 	wrapper: {
 		flex: 1
@@ -192,3 +283,5 @@ const styles = StyleSheet.create({
 		marginBottom: 20
 	}
 });
+
+export default withAuthenticator(App, withAuthenticatorConfig);
